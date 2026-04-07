@@ -80,7 +80,7 @@ Unique constraint on `(user_id, book_id)`.
 | following_id| uuid, FK    | → users  |
 | created_at  | timestamptz  |          |
 
-Unique constraint on `(follower_id, following_id)`.
+Unique constraint on `(follower_id, following_id)`. CHECK constraint: `follower_id != following_id`.
 
 ### recommendations
 
@@ -101,7 +101,7 @@ Unique constraint on `(follower_id, following_id)`.
 | `/feed`               | Activity feed from followed users                        |
 | `/search`             | Search books via Google Books API, add to shelves        |
 | `/shelves`            | Current user's shelves (Want to Read / Reading / Read)   |
-| `/book/[id]`          | Book detail — info, who else has it, add/rate            |
+| `/book/[googleId]`    | Book detail by `google_books_id` — info, who else has it, add/rate. If the book isn't in the local DB yet, fetch from Google Books API and display (don't persist until user adds it). |
 | `/profile/[username]` | User profile — shelves, stats, follow button             |
 | `/recommendations`    | Incoming/outgoing book recommendations                   |
 | `/discover`           | Browse users to follow                                   |
@@ -117,7 +117,13 @@ Unique constraint on `(follower_id, following_id)`.
 
 ## Feed Logic
 
-Query `user_books` + `recommendations` where user is in your following list, ordered by `created_at` DESC, paginated.
+The feed shows activity **from users you follow**. It unions:
+- `user_books` entries (someone you follow added/rated a book)
+- `recommendations` **sent by** people you follow (not recommendations sent *to* you — those appear on `/recommendations`)
+
+Ordered by `created_at` DESC, offset-paginated (page size 20).
+
+Recommended indexes: `user_books(user_id, created_at)`, `recommendations(from_user_id, created_at)`, `follows(follower_id)`.
 
 ## Visual Style
 
@@ -140,6 +146,27 @@ Minimal and modern — clean white space, crisp typography, subtle animations. I
 - **Google Books API** (primary): Search and metadata. Requires a free API key from Google Cloud Console.
 - **Open Library Covers API** (supplement): Direct cover image URLs via `https://covers.openlibrary.org/b/isbn/{ISBN}-L.jpg`. No key needed.
 - When a user adds a book, we store it in the `books` table to avoid repeated API calls.
+- **Cover fallback:** Use Open Library cover URL when ISBN is available; fall back to Google Books `imageLinks.thumbnail` when ISBN is missing.
+
+## Data Model Notes
+
+- **RLS:** Not used. All Supabase access uses the service role key server-side. Authorization is enforced in Server Actions (check Clerk `userId` before mutations).
+- **FK cascades:** All FKs on `user_books`, `follows`, and `recommendations` use `ON DELETE CASCADE` from `users` and `books`.
+- **Rating constraint:** `CHECK (rating >= 1 AND rating <= 5)` on `user_books.rating`.
+- **Self-recommendation prevention:** Enforced at the application layer in the recommend Server Action.
+- **Array defaults:** `authors` and `categories` default to `'{}'` (empty array), never NULL.
+- **Status transitions:** No constraints — users can move directly between any status (e.g., `want_to_read` → `read`).
+
+## Environment Variables
+
+```
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+CLERK_WEBHOOK_SECRET=
+GOOGLE_BOOKS_API_KEY=
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+```
 
 ## Scope Boundaries (Out of scope for v1)
 
