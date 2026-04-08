@@ -1,7 +1,7 @@
-const GOOGLE_BOOKS_API = "https://www.googleapis.com/books/v1/volumes";
+const OL_SEARCH_API = "https://openlibrary.org/search.json";
 
 export interface GoogleBookResult {
-  google_books_id: string;
+  google_books_id: string; // stores Open Library work key (e.g. "OL123W")
   title: string;
   authors: string[];
   description: string | null;
@@ -13,72 +13,102 @@ export interface GoogleBookResult {
 }
 
 export function getCoverUrl(
+  coverId: number | undefined,
   isbn: string | undefined,
-  googleThumbnail: string | undefined,
 ): string | null {
+  if (coverId) {
+    return `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`;
+  }
   if (isbn) {
     return `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
   }
-  return googleThumbnail ?? null;
-}
-
-function extractIsbn(
-  identifiers?: { type: string; identifier: string }[],
-): string | null {
-  if (!identifiers) return null;
-  const isbn13 = identifiers.find((id) => id.type === "ISBN_13");
-  const isbn10 = identifiers.find((id) => id.type === "ISBN_10");
-  return isbn13?.identifier ?? isbn10?.identifier ?? null;
+  return null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseBookResult(volume: any): GoogleBookResult {
-  const info = volume.volumeInfo ?? {};
-  const isbn = extractIsbn(info.industryIdentifiers);
-  const thumbnail = info.imageLinks?.thumbnail;
+export function parseBookResult(doc: any): GoogleBookResult {
+  const isbn = doc.isbn?.[0] ?? null;
+  const coverId = doc.cover_i;
+  const workKey = doc.key?.replace("/works/", "") ?? doc.key ?? `ol_${doc.cover_i}`;
 
   return {
-    google_books_id: volume.id,
-    title: info.title ?? "Untitled",
-    authors: info.authors ?? [],
-    description: info.description ?? null,
-    cover_url: getCoverUrl(isbn ?? undefined, thumbnail),
+    google_books_id: workKey,
+    title: doc.title ?? "Untitled",
+    authors: doc.author_name ?? [],
+    description: null, // OL search doesn't return descriptions
+    cover_url: getCoverUrl(coverId, isbn),
     isbn,
-    page_count: info.pageCount ?? null,
-    categories: info.categories ?? [],
-    published_date: info.publishedDate ?? null,
+    page_count: doc.number_of_pages_median ?? null,
+    categories: doc.subject?.slice(0, 5) ?? [],
+    published_date: doc.first_publish_year?.toString() ?? null,
   };
 }
 
 export async function searchBooks(
   query: string,
 ): Promise<GoogleBookResult[]> {
-  const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
-  const url = `${GOOGLE_BOOKS_API}?q=${encodeURIComponent(query)}&maxResults=20&key=${apiKey}`;
+  const url = `${OL_SEARCH_API}?q=${encodeURIComponent(query)}&limit=20&fields=key,title,author_name,cover_i,isbn,number_of_pages_median,subject,first_publish_year`;
 
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`Google Books API error: ${res.status}`);
+    throw new Error(`Open Library API error: ${res.status}`);
   }
 
   const data = await res.json();
-  if (!data.items) return [];
+  if (!data.docs) return [];
 
-  return data.items.map(parseBookResult);
+  return data.docs.map(parseBookResult);
 }
 
 export async function getBook(
-  googleBooksId: string,
+  workKey: string,
 ): Promise<GoogleBookResult | null> {
-  const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
-  const url = `${GOOGLE_BOOKS_API}/${googleBooksId}?key=${apiKey}`;
+  // Fetch work details
+  const url = `https://openlibrary.org/works/${workKey}.json`;
 
   const res = await fetch(url);
   if (!res.ok) {
     if (res.status === 404) return null;
-    throw new Error(`Google Books API error: ${res.status}`);
+    throw new Error(`Open Library API error: ${res.status}`);
   }
 
   const data = await res.json();
-  return parseBookResult(data);
+
+  // Get author names
+  const authorKeys =
+    data.authors?.map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (a: any) => a.author?.key ?? a.key,
+    ) ?? [];
+  const authorNames = await Promise.all(
+    authorKeys.slice(0, 5).map(async (key: string) => {
+      try {
+        const r = await fetch(`https://openlibrary.org${key}.json`);
+        if (!r.ok) return "Unknown";
+        const d = await r.json();
+        return d.name ?? "Unknown";
+      } catch {
+        return "Unknown";
+      }
+    }),
+  );
+
+  const description =
+    typeof data.description === "string"
+      ? data.description
+      : data.description?.value ?? null;
+
+  const coverId = data.covers?.[0];
+
+  return {
+    google_books_id: workKey,
+    title: data.title ?? "Untitled",
+    authors: authorNames,
+    description,
+    cover_url: getCoverUrl(coverId, undefined),
+    isbn: null,
+    page_count: null,
+    categories: data.subjects?.slice(0, 5) ?? [],
+    published_date: null,
+  };
 }

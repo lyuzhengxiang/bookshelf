@@ -2,68 +2,65 @@ import { describe, it, expect } from "vitest";
 import { getCoverUrl, parseBookResult } from "@/lib/books/google-books";
 
 describe("getCoverUrl", () => {
-  it("returns Open Library URL when ISBN is available", () => {
-    const url = getCoverUrl("9780143127550", undefined);
+  it("returns Open Library cover ID URL when coverId is available", () => {
+    const url = getCoverUrl(12345, undefined);
+    expect(url).toBe("https://covers.openlibrary.org/b/id/12345-L.jpg");
+  });
+
+  it("falls back to ISBN cover URL when no coverId", () => {
+    const url = getCoverUrl(undefined, "9780143127550");
     expect(url).toBe(
       "https://covers.openlibrary.org/b/isbn/9780143127550-L.jpg",
     );
   });
 
-  it("falls back to Google thumbnail when no ISBN", () => {
-    const url = getCoverUrl(undefined, "https://books.google.com/thumb.jpg");
-    expect(url).toBe("https://books.google.com/thumb.jpg");
+  it("prefers coverId over ISBN", () => {
+    const url = getCoverUrl(12345, "9780143127550");
+    expect(url).toBe("https://covers.openlibrary.org/b/id/12345-L.jpg");
   });
 
-  it("returns null when neither ISBN nor thumbnail", () => {
+  it("returns null when neither coverId nor ISBN", () => {
     const url = getCoverUrl(undefined, undefined);
     expect(url).toBeNull();
   });
 });
 
 describe("parseBookResult", () => {
-  it("parses a Google Books API volume into our format", () => {
-    const volume = {
-      id: "abc123",
-      volumeInfo: {
-        title: "The Great Gatsby",
-        authors: ["F. Scott Fitzgerald"],
-        description: "A novel about the Jazz Age",
-        imageLinks: { thumbnail: "https://books.google.com/thumb.jpg" },
-        industryIdentifiers: [
-          { type: "ISBN_13", identifier: "9780743273565" },
-        ],
-        pageCount: 180,
-        categories: ["Fiction"],
-        publishedDate: "1925-04-10",
-      },
+  it("parses an Open Library search doc into our format", () => {
+    const doc = {
+      key: "/works/OL123W",
+      title: "The Great Gatsby",
+      author_name: ["F. Scott Fitzgerald"],
+      cover_i: 67890,
+      isbn: ["9780743273565", "0743273567"],
+      number_of_pages_median: 180,
+      subject: ["Fiction", "Classic Literature", "American"],
+      first_publish_year: 1925,
     };
 
-    const result = parseBookResult(volume);
+    const result = parseBookResult(doc);
     expect(result).toEqual({
-      google_books_id: "abc123",
+      google_books_id: "OL123W",
       title: "The Great Gatsby",
       authors: ["F. Scott Fitzgerald"],
-      description: "A novel about the Jazz Age",
-      cover_url:
-        "https://covers.openlibrary.org/b/isbn/9780743273565-L.jpg",
+      description: null,
+      cover_url: "https://covers.openlibrary.org/b/id/67890-L.jpg",
       isbn: "9780743273565",
       page_count: 180,
-      categories: ["Fiction"],
-      published_date: "1925-04-10",
+      categories: ["Fiction", "Classic Literature", "American"],
+      published_date: "1925",
     });
   });
 
   it("handles missing fields gracefully", () => {
-    const volume = {
-      id: "xyz789",
-      volumeInfo: {
-        title: "Unknown Book",
-      },
+    const doc = {
+      key: "/works/OL456W",
+      title: "Unknown Book",
     };
 
-    const result = parseBookResult(volume);
+    const result = parseBookResult(doc);
     expect(result).toEqual({
-      google_books_id: "xyz789",
+      google_books_id: "OL456W",
       title: "Unknown Book",
       authors: [],
       description: null,
