@@ -36,11 +36,9 @@ export function RecommendDialog({ bookData, following }: RecommendDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Recommend
-        </Button>
+    <Dialog open={open} onOpenChange={(value) => setOpen(value)}>
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+        Recommend
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

@@ -26,14 +26,14 @@ export function ShelfSelector({ currentStatus, onSelect }: ShelfSelectorProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={isPending}>
-          {isPending
-            ? "..."
-            : currentStatus
-              ? STATUS_LABELS[currentStatus]
-              : "Add to Shelf"}
-        </Button>
+      <DropdownMenuTrigger
+        render={<Button variant="outline" size="sm" disabled={isPending} />}
+      >
+        {isPending
+          ? "..."
+          : currentStatus
+            ? STATUS_LABELS[currentStatus]
+            : "Add to Shelf"}
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         {(Object.keys(STATUS_LABELS) as BookStatus[]).map((status) => (

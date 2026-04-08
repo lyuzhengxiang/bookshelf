@@ -1,4 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import type { NextFetchEvent } from "next/server";
+import type { NextRequest } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -16,8 +18,8 @@ const handler = clerkMiddleware(async (auth, request) => {
 });
 
 // Next.js 16 uses proxy.ts with a named `proxy` export instead of middleware.ts
-export function proxy(request: Request) {
-  return handler(request as Parameters<typeof handler>[0]);
+export function proxy(request: NextRequest, event: NextFetchEvent) {
+  return handler(request, event);
 }
 
 export const config = {

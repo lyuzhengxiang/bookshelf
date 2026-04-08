@@ -19,11 +19,11 @@ export default async function LandingPage() {
         great read.
       </p>
       <div className="mt-10 flex gap-4">
-        <Button size="lg" asChild>
-          <Link href="/sign-up">Get Started</Link>
+        <Button size="lg" render={<Link href="/sign-up" />}>
+          Get Started
         </Button>
-        <Button size="lg" variant="outline" asChild>
-          <Link href="/sign-in">Sign In</Link>
+        <Button size="lg" variant="outline" render={<Link href="/sign-in" />}>
+          Sign In
         </Button>
       </div>
     </div>

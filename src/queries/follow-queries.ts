@@ -23,7 +23,7 @@ export async function getFollowers(userId: string): Promise<DbUser[]> {
     .eq("following_id", userId);
 
   return (
-    data?.map((d) => (d as { follower: DbUser }).follower) ?? []
+    data?.map((d) => (d as unknown as { follower: DbUser }).follower) ?? []
   );
 }
 
@@ -35,7 +35,7 @@ export async function getFollowing(userId: string): Promise<DbUser[]> {
     .eq("follower_id", userId);
 
   return (
-    data?.map((d) => (d as { following: DbUser }).following) ?? []
+    data?.map((d) => (d as unknown as { following: DbUser }).following) ?? []
   );
 }
 
