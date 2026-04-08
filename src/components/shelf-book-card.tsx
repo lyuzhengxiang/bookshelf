@@ -3,10 +3,7 @@
 import { useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { RatingStars } from "@/components/rating-stars";
-import { ShelfSelector } from "@/components/shelf-selector";
 import {
   updateBookStatus,
   rateBook,
@@ -15,12 +12,20 @@ import {
 import type { BookStatus } from "@/lib/supabase/types";
 import type { UserBookWithBook } from "@/queries/shelf-queries";
 
+const STATUS_LABELS: Record<BookStatus, string> = {
+  want_to_read: "WANT",
+  reading: "READING",
+  read: "READ",
+};
+
 export function ShelfBookCard({ userBook }: { userBook: UserBookWithBook }) {
   const [isPending, startTransition] = useTransition();
   const book = userBook.books;
 
-  const handleStatusChange = async (status: BookStatus) => {
-    await updateBookStatus(userBook.id, status);
+  const handleStatusChange = (status: BookStatus) => {
+    startTransition(async () => {
+      await updateBookStatus(userBook.id, status);
+    });
   };
 
   const handleRate = (rating: number) => {
@@ -36,34 +41,36 @@ export function ShelfBookCard({ userBook }: { userBook: UserBookWithBook }) {
   };
 
   return (
-    <Card>
-      <CardContent className="flex gap-4 p-4">
-        <Link href={`/book/${book.google_books_id}`}>
-          <div className="relative h-24 w-16 flex-shrink-0 overflow-hidden rounded bg-muted">
-            {book.cover_url ? (
-              <Image
-                src={book.cover_url}
-                alt={book.title}
-                fill
-                className="object-cover"
-                sizes="64px"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground">
-                No cover
-              </div>
-            )}
-          </div>
-        </Link>
+    <div className="border-3 border-black flex overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-shadow">
+      <Link href={`/book/${book.google_books_id}`} className="flex-shrink-0">
+        <div className="relative h-36 w-24 bg-gray-100">
+          {book.cover_url ? (
+            <Image
+              src={book.cover_url}
+              alt={book.title}
+              fill
+              className="object-cover"
+              sizes="96px"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-black text-white p-2">
+              <span className="text-[8px] font-bold uppercase text-center">
+                {book.title}
+              </span>
+            </div>
+          )}
+        </div>
+      </Link>
 
-        <div className="min-w-0 flex-1">
+      <div className="flex-1 border-l-3 border-black p-3 flex flex-col justify-between">
+        <div>
           <Link
             href={`/book/${book.google_books_id}`}
-            className="font-medium hover:underline"
+            className="font-bold text-sm uppercase tracking-tight hover:underline"
           >
             {book.title}
           </Link>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[10px] text-gray-500 uppercase">
             {book.authors.join(", ")}
           </p>
           <div className="mt-2">
@@ -71,22 +78,30 @@ export function ShelfBookCard({ userBook }: { userBook: UserBookWithBook }) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <ShelfSelector
-            currentStatus={userBook.status}
-            onSelect={handleStatusChange}
-          />
-          <Button
-            variant="ghost"
-            size="sm"
+        <div className="flex gap-1 mt-2">
+          {(Object.keys(STATUS_LABELS) as BookStatus[]).map((status) => (
+            <button
+              key={status}
+              onClick={() => handleStatusChange(status)}
+              disabled={isPending}
+              className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider border-2 border-black transition-colors ${
+                status === userBook.status
+                  ? "bg-black text-white"
+                  : "hover:bg-black hover:text-white"
+              }`}
+            >
+              {STATUS_LABELS[status]}
+            </button>
+          ))}
+          <button
             onClick={handleRemove}
             disabled={isPending}
-            className="text-destructive"
+            className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors ml-auto"
           >
-            Remove
-          </Button>
+            X
+          </button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

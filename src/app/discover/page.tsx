@@ -26,14 +26,18 @@ export default async function DiscoverPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Discover People</h1>
+      <h1 className="mb-8 text-4xl font-bold uppercase tracking-tighter">
+        Discover People
+      </h1>
 
       {usersWithFollowStatus.length === 0 ? (
-        <p className="py-8 text-center text-muted-foreground">
-          No other users yet.
-        </p>
+        <div className="border-4 border-dashed border-gray-300 py-20 text-center">
+          <p className="text-sm uppercase tracking-widest text-gray-400">
+            No other users yet.
+          </p>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 md:grid-cols-2">
           {usersWithFollowStatus.map((user) => (
             <UserCard
               key={user.id}

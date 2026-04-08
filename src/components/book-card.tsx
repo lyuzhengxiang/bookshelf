@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
 
 interface BookCardProps {
   googleBooksId: string;
@@ -16,34 +15,34 @@ export function BookCard({
   coverUrl,
 }: BookCardProps) {
   return (
-    <Link href={`/book/${googleBooksId}`}>
-      <Card className="group h-full overflow-hidden transition-shadow hover:shadow-md">
-        <CardContent className="flex gap-4 p-4">
-          <div className="relative h-32 w-20 flex-shrink-0 overflow-hidden rounded bg-muted">
-            {coverUrl ? (
-              <Image
-                src={coverUrl}
-                alt={title}
-                fill
-                className="object-cover"
-                sizes="80px"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                No cover
-              </div>
-            )}
-          </div>
-          <div className="min-w-0">
-            <h3 className="line-clamp-2 font-semibold group-hover:underline">
-              {title}
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {authors.length > 0 ? authors.join(", ") : "Unknown author"}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+    <Link href={`/book/${googleBooksId}`} className="group block">
+      <div className="border-3 border-black overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-shadow">
+        <div className="relative aspect-[2/3] w-full bg-gray-100">
+          {coverUrl ? (
+            <Image
+              src={coverUrl}
+              alt={title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 50vw, 200px"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-black text-white p-4">
+              <span className="text-xs font-bold uppercase tracking-wider text-center">
+                {title}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="border-t-3 border-black p-3 bg-white">
+          <h3 className="font-bold text-sm uppercase tracking-tight line-clamp-1 group-hover:underline">
+            {title}
+          </h3>
+          <p className="mt-0.5 text-xs text-gray-500 uppercase tracking-wider line-clamp-1">
+            {authors.length > 0 ? authors.join(", ") : "Unknown"}
+          </p>
+        </div>
+      </div>
     </Link>
   );
 }

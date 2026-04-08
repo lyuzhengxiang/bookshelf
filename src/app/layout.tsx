@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Space_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Navbar } from "@/components/navbar";
 import "./globals.css";
 
-const geist = Geist({
-  variable: "--font-geist-sans",
+const spaceMono = Space_Mono({
+  weight: ["400", "700"],
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Bookshelf",
+  title: "BOOKSHELF",
   description: "A social reading tracker",
 };
 
@@ -21,10 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${geist.variable} h-full antialiased`}>
-        <body className="min-h-full flex flex-col font-sans">
+      <html lang="en" className={`${spaceMono.variable} h-full`}>
+        <body className="min-h-full flex flex-col font-mono bg-white text-black">
           <Navbar />
-          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+          <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
             {children}
           </main>
         </body>
