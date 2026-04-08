@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { SignUpButton, SignInButton } from "@clerk/nextjs";
 
 export default async function LandingPage() {
@@ -30,6 +31,12 @@ export default async function LandingPage() {
           </button>
         </SignInButton>
       </div>
+      <Link
+        href="/browse"
+        className="mt-6 text-xs uppercase tracking-widest text-gray-400 border-b border-gray-400 hover:text-black hover:border-black transition-colors"
+      >
+        or browse books first
+      </Link>
     </div>
   );
 }

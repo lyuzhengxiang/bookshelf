@@ -4,11 +4,13 @@ import type { NextRequest } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/browse",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/book/(.*)",
   "/profile/(.*)",
   "/api/webhooks(.*)",
+  "/api/books/browse",
 ]);
 
 const handler = clerkMiddleware(async (auth, request) => {

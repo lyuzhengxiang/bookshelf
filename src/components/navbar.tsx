@@ -16,6 +16,7 @@ export async function Navbar() {
           <div className="flex items-center gap-1">
             {[
               { href: "/feed", label: "FEED" },
+              { href: "/browse", label: "BROWSE" },
               { href: "/search", label: "SEARCH" },
               { href: "/shelves", label: "SHELVES" },
               { href: "/recommendations", label: "RECS" },
