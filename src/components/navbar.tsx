@@ -1,11 +1,8 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
-import { UserButton } from "@clerk/nextjs";
+import { Show, UserButton, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 
-export async function Navbar() {
-  const { userId } = await auth();
-
+export function Navbar() {
   return (
     <header className="border-b">
       <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
@@ -13,7 +10,7 @@ export async function Navbar() {
           Bookshelf
         </Link>
 
-        {userId ? (
+        <Show when="signed-in">
           <div className="flex items-center gap-6">
             <Link
               href="/feed"
@@ -47,16 +44,18 @@ export async function Navbar() {
             </Link>
             <UserButton />
           </div>
-        ) : (
+        </Show>
+
+        <Show when="signed-out">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" render={<Link href="/sign-in" />}>
-              Sign in
-            </Button>
-            <Button render={<Link href="/sign-up" />}>
-              Sign up
-            </Button>
+            <SignInButton>
+              <Button variant="ghost">Sign in</Button>
+            </SignInButton>
+            <SignUpButton>
+              <Button>Sign up</Button>
+            </SignUpButton>
           </div>
-        )}
+        </Show>
       </nav>
     </header>
   );
