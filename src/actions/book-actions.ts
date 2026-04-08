@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/client";
-import { getUserByClerkId } from "@/queries/user-queries";
+import { getOrCreateCurrentUser } from "@/queries/user-queries";
 import { getOrCreateBook } from "@/queries/book-queries";
 import type { BookStatus } from "@/lib/supabase/types";
 import type { GoogleBookResult } from "@/lib/books/google-books";
@@ -15,7 +15,7 @@ export async function addBookToShelf(
   const { userId: clerkId } = await auth();
   if (!clerkId) throw new Error("Unauthorized");
 
-  const user = await getUserByClerkId(clerkId);
+  const user = await getOrCreateCurrentUser(clerkId);
   if (!user) throw new Error("User not found");
 
   const book = await getOrCreateBook(bookData);
@@ -42,7 +42,7 @@ export async function removeBookFromShelf(userBookId: string) {
   const { userId: clerkId } = await auth();
   if (!clerkId) throw new Error("Unauthorized");
 
-  const user = await getUserByClerkId(clerkId);
+  const user = await getOrCreateCurrentUser(clerkId);
   if (!user) throw new Error("User not found");
 
   const supabase = createClient();
@@ -64,7 +64,7 @@ export async function updateBookStatus(
   const { userId: clerkId } = await auth();
   if (!clerkId) throw new Error("Unauthorized");
 
-  const user = await getUserByClerkId(clerkId);
+  const user = await getOrCreateCurrentUser(clerkId);
   if (!user) throw new Error("User not found");
 
   const supabase = createClient();
@@ -93,7 +93,7 @@ export async function rateBook(userBookId: string, rating: number) {
 
   if (rating < 1 || rating > 5) throw new Error("Rating must be 1-5");
 
-  const user = await getUserByClerkId(clerkId);
+  const user = await getOrCreateCurrentUser(clerkId);
   if (!user) throw new Error("User not found");
 
   const supabase = createClient();

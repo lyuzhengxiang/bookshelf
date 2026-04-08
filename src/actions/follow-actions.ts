@@ -3,13 +3,13 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/client";
-import { getUserByClerkId } from "@/queries/user-queries";
+import { getOrCreateCurrentUser } from "@/queries/user-queries";
 
 export async function followUser(targetUserId: string) {
   const { userId: clerkId } = await auth();
   if (!clerkId) throw new Error("Unauthorized");
 
-  const user = await getUserByClerkId(clerkId);
+  const user = await getOrCreateCurrentUser(clerkId);
   if (!user) throw new Error("User not found");
 
   if (user.id === targetUserId) throw new Error("Cannot follow yourself");
@@ -33,7 +33,7 @@ export async function unfollowUser(targetUserId: string) {
   const { userId: clerkId } = await auth();
   if (!clerkId) throw new Error("Unauthorized");
 
-  const user = await getUserByClerkId(clerkId);
+  const user = await getOrCreateCurrentUser(clerkId);
   if (!user) throw new Error("User not found");
 
   const supabase = createClient();

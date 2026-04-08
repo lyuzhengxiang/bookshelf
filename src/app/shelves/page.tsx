@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getUserByClerkId } from "@/queries/user-queries";
+import { getOrCreateCurrentUser } from "@/queries/user-queries";
 import { getUserBooks } from "@/queries/shelf-queries";
 import { ShelfBookCard } from "@/components/shelf-book-card";
 import type { BookStatus } from "@/lib/supabase/types";
@@ -19,7 +19,7 @@ export default async function ShelvesPage({
   const { userId: clerkId } = await auth();
   if (!clerkId) redirect("/sign-in");
 
-  const user = await getUserByClerkId(clerkId);
+  const user = await getOrCreateCurrentUser(clerkId);
   if (!user) redirect("/sign-in");
 
   const allBooks = await getUserBooks(user.id);

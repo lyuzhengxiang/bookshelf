@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getUserByClerkId } from "@/queries/user-queries";
+import { getOrCreateCurrentUser } from "@/queries/user-queries";
 import { getFeed } from "@/queries/feed-queries";
 import { FeedItem } from "@/components/feed-item";
 
@@ -12,7 +12,7 @@ export default async function FeedPage({
   const { userId: clerkId } = await auth();
   if (!clerkId) redirect("/sign-in");
 
-  const user = await getUserByClerkId(clerkId);
+  const user = await getOrCreateCurrentUser(clerkId);
   if (!user) redirect("/sign-in");
 
   const { page: pageParam } = await searchParams;

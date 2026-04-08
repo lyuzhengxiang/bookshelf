@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RatingStars } from "@/components/rating-stars";
 import { getBook } from "@/lib/books/google-books";
 import { getBookByGoogleId, getBookUsers } from "@/queries/book-queries";
-import { getUserByClerkId } from "@/queries/user-queries";
+import { getOrCreateCurrentUser } from "@/queries/user-queries";
 import { getUserBook } from "@/queries/shelf-queries";
 import { getFollowing } from "@/queries/follow-queries";
 import { BookDetailActions } from "./book-detail-actions";
@@ -58,7 +58,7 @@ export default async function BookDetailPage({
   let following: Awaited<ReturnType<typeof getFollowing>> = [];
 
   if (clerkId) {
-    const user = await getUserByClerkId(clerkId);
+    const user = await getOrCreateCurrentUser(clerkId);
     if (user && localBook) {
       currentUserBook = await getUserBook(user.id, localBook.id);
     }

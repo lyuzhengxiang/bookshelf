@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BookCard } from "@/components/book-card";
-import { getUserByClerkId } from "@/queries/user-queries";
+import { getOrCreateCurrentUser } from "@/queries/user-queries";
 import {
   getIncomingRecommendations,
   getOutgoingRecommendations,
@@ -15,7 +15,7 @@ export default async function RecommendationsPage() {
   const { userId: clerkId } = await auth();
   if (!clerkId) redirect("/sign-in");
 
-  const user = await getUserByClerkId(clerkId);
+  const user = await getOrCreateCurrentUser(clerkId);
   if (!user) redirect("/sign-in");
 
   const [incoming, outgoing] = await Promise.all([

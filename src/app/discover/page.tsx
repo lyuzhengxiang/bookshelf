@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getUserByClerkId, getAllUsers } from "@/queries/user-queries";
+import { getOrCreateCurrentUser, getAllUsers } from "@/queries/user-queries";
 import { getFollowing } from "@/queries/follow-queries";
 import { UserCard } from "@/components/user-card";
 
@@ -8,7 +8,7 @@ export default async function DiscoverPage() {
   const { userId: clerkId } = await auth();
   if (!clerkId) redirect("/sign-in");
 
-  const currentUser = await getUserByClerkId(clerkId);
+  const currentUser = await getOrCreateCurrentUser(clerkId);
   if (!currentUser) redirect("/sign-in");
 
   const [allUsers, followingList] = await Promise.all([

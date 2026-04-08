@@ -4,7 +4,7 @@ import Image from "next/image";
 import { FollowButton } from "@/components/follow-button";
 import { BookCard } from "@/components/book-card";
 import { EditBio } from "@/components/edit-bio";
-import { getUserByClerkId, getUserByUsername } from "@/queries/user-queries";
+import { getOrCreateCurrentUser, getUserByUsername } from "@/queries/user-queries";
 import { getUserBooks, getUserBookCounts } from "@/queries/shelf-queries";
 import {
   isFollowing,
@@ -36,7 +36,7 @@ export default async function ProfilePage({
   let isOwnProfile = false;
 
   if (clerkId) {
-    currentUser = await getUserByClerkId(clerkId);
+    currentUser = await getOrCreateCurrentUser(clerkId);
     if (currentUser) {
       isOwnProfile = currentUser.id === profileUser.id;
       if (!isOwnProfile) {

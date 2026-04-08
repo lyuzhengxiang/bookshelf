@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/client";
-import { getUserByClerkId } from "@/queries/user-queries";
+import { getOrCreateCurrentUser } from "@/queries/user-queries";
 import { getOrCreateBook } from "@/queries/book-queries";
 import type { GoogleBookResult } from "@/lib/books/google-books";
 
@@ -15,7 +15,7 @@ export async function sendRecommendation(
   const { userId: clerkId } = await auth();
   if (!clerkId) throw new Error("Unauthorized");
 
-  const user = await getUserByClerkId(clerkId);
+  const user = await getOrCreateCurrentUser(clerkId);
   if (!user) throw new Error("User not found");
 
   if (user.id === toUserId) throw new Error("Cannot recommend to yourself");
